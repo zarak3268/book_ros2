@@ -143,9 +143,9 @@ AvoidanceNode::make_marker(const std::vector<float> & vector, VFFColor vff_color
   start.x = 0.0;
   start.y = 0.0;
   geometry_msgs::msg::Point end;
-  start.x = vector[0];
-  start.y = vector[1];
-  marker.points = {end, start};
+  end.x = vector[0];
+  end.y = vector[1];
+  marker.points = {start, end};
 
   marker.scale.x = 0.05;
   marker.scale.y = 0.1;
