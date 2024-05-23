@@ -80,9 +80,16 @@ ObstacleMonitorNode::control_cycle()
   end.z = z;
   obstacle_arrow.points = {start, end};
 
-  obstacle_arrow.color.r = 1.0;
-  obstacle_arrow.color.g = 0.0;
-  obstacle_arrow.color.b = 0.0;
+  float r = 1.0, g = 0.0, b = 0.0;
+  if (sqrt(x*x + y*y + z*z) >= FAR) {
+    r = 0.0;
+    g = 1.0;
+    b = 0.0;
+  }
+
+  obstacle_arrow.color.r = r;
+  obstacle_arrow.color.g = g;
+  obstacle_arrow.color.b = b;
   obstacle_arrow.color.a = 1.0;
 
   obstacle_arrow.scale.x = 0.02;

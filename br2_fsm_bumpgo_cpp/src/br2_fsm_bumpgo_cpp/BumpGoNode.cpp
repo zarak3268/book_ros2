@@ -28,7 +28,8 @@ using std::placeholders::_1;
 
 BumpGoNode::BumpGoNode()
 : Node("bump_go"),
-  state_(FORWARD)
+  state_(FORWARD),
+  speed_angular_(0)
 {
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
@@ -72,11 +73,12 @@ BumpGoNode::control_cycle()
       out_vel.linear.x = -SPEED_LINEAR;
 
       if (check_back_2_turn()) {
+        calculate_angular_speed();
         go_state(TURN);
       }
       break;
     case TURN:
-      out_vel.angular.z = SPEED_ANGULAR;
+      out_vel.angular.z = speed_angular_;
 
       if (check_turn_2_forward()) {
         go_state(FORWARD);
@@ -100,13 +102,41 @@ BumpGoNode::go_state(int new_state)
   state_ts_ = now();
 }
 
+void
+BumpGoNode::calculate_angular_speed()
+{
+  size_t start_pos = last_scan_->ranges.size() / 2;
+  size_t end_pos = 0;
+  
+  float max_range = last_scan_->ranges[0];
+  for (int i = 0; i < last_scan_->ranges.size(); i++) {
+    float range = last_scan_->ranges[i];
+    if (range > max_range) {
+      max_range = range;
+      end_pos = i;
+    }
+  }
+
+  float angular_distance = (end_pos - start_pos)*(last_scan_->angle_increment);
+  speed_angular_ = angular_distance/2.0;
+}
+
 bool
 BumpGoNode::check_forward_2_back()
 {
   // going forward when deteting an obstacle
-  // at 0.5 meters with the front laser read
+  // at 0.5 meters in a 30 degree angle in front of the robot is detected
   size_t pos = last_scan_->ranges.size() / 2;
-  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;
+
+  for (int i = pos; (i-pos)*last_scan_->angle_increment < PI/12; i++) {
+    if (last_scan_->ranges[i] < OBSTACLE_DISTANCE) return true;
+  }
+
+  for (int i = pos; (pos-i)*last_scan_->angle_increment < PI/12; i--) {
+    if (last_scan_->ranges[i] < OBSTACLE_DISTANCE) return true;
+  }
+
+  return false;
 }
 
 bool

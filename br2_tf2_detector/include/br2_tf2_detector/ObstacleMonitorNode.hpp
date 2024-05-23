@@ -42,6 +42,9 @@ private:
   tf2_ros::TransformListener tf_listener_;
 
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
+
+  static constexpr float NEAR = 1.0f;
+  static constexpr float FAR = 2.0f;
 };
 
 }  // namespace br2_tf2_detector
